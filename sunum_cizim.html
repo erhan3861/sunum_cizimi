@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hücre Biyolojisi Sunumu</title>
+    <style>
+        /* Genel sayfa ayarları */
+        body {
+            margin: 0;
+            background-color: #1a1a2e;
+            /* Koyu lacivert arka plan */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* Sunum alanı (Kare formatta) */
+        .presentation-container {
+            width: 80vmin;
+            height: 80vmin;
+            position: relative;
+            background-color: #fff;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        /* Her bir slayt (Adım) */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* GÖRSELİNİN ADI BURADA */
+            background-image: url('hücre.jpg');
+            background-size: 200% 200%;
+            /* Görseli 2 kat büyüt (böylece 4'e bölmüş oluyoruz) */
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Slaytların Konumları (Görselin Hangi Parçası Gösterilecek) */
+        .slide-1 {
+            background-position: 0% 0%;
+        }
+
+        /* Sol Üst */
+        .slide-2 {
+            background-position: 100% 0%;
+        }
+
+        /* Sağ Üst */
+        .slide-3 {
+            background-position: 0% 100%;
+        }
+
+        /* Sol Alt */
+        .slide-4 {
+            background-position: 100% 100%;
+        }
+
+        /* Sağ Alt */
+
+        /* Aktif olan slaytın görünürlüğü ve Çizim/Canlanma Efekti */
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            /* Efekti buradan yönetiyoruz: 2.5 saniye sürer */
+            animation: drawReveal 2.5s ease-out forwards;
+        }
+
+        /* Kalemle çizilip canlanma hissi veren animasyon */
+        @keyframes drawReveal {
+            0% {
+                /* Sol üstten başla, renksiz ve bulanık ol */
+                clip-path: polygon(0 0, 0 0, 0 0, 0 0);
+                filter: grayscale(100%) blur(5px) contrast(200%);
+            }
+
+            50% {
+                /* Yarısı açıldığında renklenmeye ve netleşmeye başla */
+                filter: grayscale(50%) blur(2px) contrast(150%);
+            }
+
+            100% {
+                /* Tamamen açıl, netleş ve orijinal renklerine dön */
+                clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+                filter: grayscale(0%) blur(0px) contrast(100%);
+            }
+        }
+
+        /* Kontrol Butonu */
+        .controls {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        #step-indicator {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            color: #aaa;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="step-indicator">ADIM 1 / 4</div>
+
+    <div class="presentation-container">
+        <div class="slide slide-1 active"></div>
+        <div class="slide slide-2"></div>
+        <div class="slide slide-3"></div>
+        <div class="slide slide-4"></div>
+    </div>
+
+    <div class="controls">
+        <button onclick="nextSlide()" id="nextBtn">Sonraki Adım</button>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const slides = document.querySelectorAll('.slide');
+        const indicator = document.getElementById('step-indicator');
+        const btn = document.getElementById('nextBtn');
+
+        function nextSlide() {
+            // Mevcut slayttan aktifliği kaldır
+            slides[currentSlideIndex].classList.remove('active');
+
+            // Sıradaki slayta geç (Eğer sonuncudaysa başa dön)
+            currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+
+            // Animasyonun tekrar tetiklenmesi için küçük bir DOM hilesi (Reflow)
+            void slides[currentSlideIndex].offsetWidth;
+
+            // Yeni slaytı aktif et
+            slides[currentSlideIndex].classList.add('active');
+
+            // Yazıları güncelle
+            indicator.innerText = `ADIM ${currentSlideIndex + 1} / 4`;
+
+            if (currentSlideIndex === 3) {
+                btn.innerText = "Başa Dön";
+            } else {
+                btn.innerText = "Sonraki Adım";
+            }
+        }
+    </script>
+</body>
+
+</html>

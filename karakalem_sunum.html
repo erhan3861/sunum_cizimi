@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hücre Biyolojisi - Karakalem Sanatçı Çizimi</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            /* Sanatsal bir çalışma masası hissi için açık gri arka plan */
+            background: #f4f4f9;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            /* Metinler koyu gri/siyah */
+        }
+
+        .header-info {
+            text-align: center;
+            margin-bottom: 2vh;
+        }
+
+        .step-badge {
+            display: inline-block;
+            background: #222;
+            /* Siyah etiket */
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin: 0;
+            font-weight: 600;
+            color: #111;
+        }
+
+        /* TAM KARE SUNUM TAHTASI */
+        .board {
+            width: 70vmin;
+            height: 70vmin;
+            /* Tam Kare Oran (1:1) */
+            max-width: 700px;
+            max-height: 700px;
+            background: #ffffff;
+            /* Tam Beyaz Tuval */
+            border-radius: 4px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            border: 1px solid #ddd;
+            overflow: hidden;
+            position: relative;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .controls {
+            margin-top: 4vh;
+        }
+
+        button {
+            padding: 12px 35px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid #222;
+            border-radius: 4px;
+            background: transparent;
+            color: #222;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #222;
+            color: #fff;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header-info">
+        <div class="step-badge" id="step-badge">ADIM 1 / 4</div>
+        <h2 id="step-title">Hücrenin Keşfi</h2>
+    </div>
+
+    <div class="board">
+        <svg id="scene" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <mask id="revealMask">
+                    <rect x="0" y="0" width="800" height="800" fill="black" />
+                    <path id="revealPath" fill="none" stroke="white" stroke-width="150" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </mask>
+            </defs>
+
+            <image id="slideImage" href="hücre.jpg" x="0" y="0" width="1600" height="1600"
+                preserveAspectRatio="xMidYMid slice" mask="url(#revealMask)" />
+
+            <g id="pen" style="display: none;">
+                <polygon points="-5,-90 10,-90 5,0 -5,0" fill="rgba(0,0,0,0.15)" transform="translate(6, 6)" />
+                <rect x="-6" y="-100" width="12" height="70" fill="#2c2c2c" />
+                <rect x="-2" y="-100" width="3" height="70" fill="#3d3d3d" />
+                <polygon points="-6,-30 6,-30 2,-5 -2,-5" fill="#d4a373" />
+                <polygon points="-2,-5 2,-5 0,0" fill="#1a1a1a" />
+            </g>
+        </svg>
+    </div>
+
+    <div class="controls">
+        <button onclick="nextStep()" id="nextBtn">Karakalem Çizime Başla</button>
+    </div>
+
+    <script>
+        const path = document.getElementById("revealPath");
+        const pen = document.getElementById("pen");
+        const slideImage = document.getElementById("slideImage");
+        const stepBadge = document.getElementById("step-badge");
+        const stepTitle = document.getElementById("step-title");
+        const nextBtn = document.getElementById("nextBtn");
+
+        // 4 Eşit Parçanın Kusursuz Koordinatları
+        const slides = [
+            { x: 0, y: 0, title: "Hücrenin Keşfi" },
+            { x: -800, y: 0, title: "Hücre Bölünmesi (Mitoz)" },
+            { x: 0, y: -800, title: "Bitki ve Hayvan Hücresi" },
+            { x: -800, y: -800, title: "Hücre İçi Süreçler (Protein Sentezi)" }
+        ];
+
+        let currentStep = 0;
+        let progress = 0;
+        let animFrameId = null;
+        let prevX = 0;
+
+        // Çizim süresini biraz uzatıyoruz ki karalama izlenebilsin
+        const speed = 0.002;
+
+        // RASTGELE "KARALAMA / GÖLGELENDİRME" YOLU OLUŞTURUCU
+        function generateArtistScribblePath() {
+            let d = "M 40 40 ";
+            // Ekranı 5x5 görünmez bölgelere ayırıyoruz
+            const cols = 5;
+            const rows = 5;
+            const cellW = 800 / cols;
+            const cellH = 800 / rows;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    // Yılan gibi satır satır ilerle ama bölge içinde dağıl
+                    let actualC = r % 2 === 0 ? c : (cols - 1 - c);
+                    let cx = actualC * cellW + cellW / 2;
+                    let cy = r * cellH + cellH / 2;
+
+                    // Her bölgede sanatçı 12 kez rastgele ileri geri karalama yapar
+                    for (let s = 0; s < 12; s++) {
+                        // Bölgenin merkezinden dışarı doğru rastgele sapmalar
+                        let px = cx + (Math.random() - 0.5) * cellW * 2.2;
+                        let py = cy + (Math.random() - 0.5) * cellH * 2.2;
+
+                        // Sınırların çok dışına taşmayı engelle
+                        px = Math.max(0, Math.min(800, px));
+                        py = Math.max(0, Math.min(800, py));
+
+                        d += ` L ${px} ${py}`;
+                    }
+                }
+            }
+            return d;
+        }
+
+        // Karalama yolunu SVG'ye ekle
+        path.setAttribute("d", generateArtistScribblePath());
+        const totalLength = path.getTotalLength();
+
+        function startDraw() {
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+
+            progress = 0;
+            pen.style.display = 'block';
+
+            // Görseli doğru kareye oturt
+            const currentSlide = slides[currentStep];
+            slideImage.setAttribute('x', currentSlide.x);
+            slideImage.setAttribute('y', currentSlide.y);
+            stepTitle.innerText = currentSlide.title;
+
+            // Maskeyi tamamen kapat
+            path.style.strokeDasharray = totalLength;
+            path.style.strokeDashoffset = totalLength;
+
+            stepBadge.innerText = `ADIM ${currentStep + 1} / 4`;
+            nextBtn.innerText = currentStep === 3 ? "Baştan Başla" : "Sıradaki Parçayı Çiz";
+
+            const startPoint = path.getPointAtLength(0);
+            prevX = startPoint.x;
+
+            animate();
+        }
+
+        function animate() {
+            progress += speed;
+            if (progress > 1) progress = 1;
+
+            const drawnLength = totalLength * progress;
+            path.style.strokeDashoffset = totalLength - drawnLength;
+
+            const point = path.getPointAtLength(drawnLength);
+
+            // Kalemin ani dönüşlerini yumuşatmak için bilek hareketi sınırı
+            const diffX = point.x - prevX;
+            let rotationAngle = diffX * 0.8; // Karalama yaparken çok sert dönmesin
+
+            if (rotationAngle > 35) rotationAngle = 35;
+            if (rotationAngle < -35) rotationAngle = -35;
+
+            // Kalemi yerleştir ve döndür
+            pen.setAttribute("transform", `translate(${point.x}, ${point.y}) rotate(${rotationAngle})`);
+
+            prevX = point.x;
+
+            if (progress < 1) {
+                animFrameId = requestAnimationFrame(animate);
+            } else {
+                pen.style.display = 'none'; // Çizim bitince kalemi çek
+            }
+        }
+
+        function nextStep() {
+            // Her yeni adımda karalama desenini rastgele yeniden oluştur (Hep aynı çizmese daha gerçekçi olur)
+            path.setAttribute("d", generateArtistScribblePath());
+
+            currentStep = (currentStep + 1) % 4;
+            startDraw();
+        }
+
+        // İlk adımı başlat
+        startDraw();
+    </script>
+</body>
+
+</html>

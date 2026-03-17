@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hücre Biyolojisi - Gerçekçi El Çizimi</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #e8e8ed; 
+            height: 100vh;
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .header-info {
+            text-align: center;
+            margin-bottom: 2vh;
+        }
+
+        .step-badge {
+            display: inline-block;
+            background: #2a2a35;
+            color: white;
+            padding: 6px 18px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin: 0;
+            font-weight: 700;
+            color: #111;
+        }
+
+        .board {
+            width: 70vmin; 
+            height: 70vmin; 
+            max-width: 700px;
+            max-height: 700px;
+            background: #ffffff; 
+            border-radius: 8px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+            border: 1px solid #d1d1d1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .controls {
+            margin-top: 4vh;
+        }
+
+        button {
+            padding: 14px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid #2a2a35;
+            border-radius: 8px;
+            background: transparent;
+            color: #2a2a35;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: #2a2a35;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header-info">
+        <div class="step-badge" id="step-badge">ADIM 1 / 4</div>
+        <h2 id="step-title">Hücrenin Keşfi</h2>
+    </div>
+
+    <div class="board">
+        <svg id="scene" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <mask id="revealMask">
+                    <rect x="0" y="0" width="800" height="800" fill="black" />
+                    <path id="revealPath" fill="none" stroke="white" stroke-width="160" stroke-linecap="round" stroke-linejoin="round" />
+                </mask>
+            </defs>
+
+            <image id="slideImage" href="hücre.jpg" x="0" y="0" width="1600" height="1600"
+                preserveAspectRatio="xMidYMid slice" mask="url(#revealMask)" />
+
+            <g id="pen" style="display: none;">
+                <polygon id="penShadow" points="-5,-120 20,-120 15,0 0,0" fill="rgba(0,0,0,0.15)" />
+                
+                <g id="penBody">
+                    <rect x="-16" y="-230" width="32" height="30" fill="#a9a9a9" />
+                    <rect x="-16" y="-225" width="32" height="4" fill="#888" />
+                    <rect x="-16" y="-215" width="32" height="4" fill="#888" />
+                    
+                    <rect x="-14" y="-250" width="28" height="20" rx="4" fill="#ff9999" />
+                    
+                    <rect x="-16" y="-200" width="32" height="150" fill="#ffc107" />
+                    <rect x="-16" y="-200" width="8" height="150" fill="#e0a800" />
+                    <rect x="8" y="-200" width="6" height="150" fill="#ffcd38" />
+                    
+                    <polygon points="-16,-50 16,-50 4,-10 -4,-10" fill="#f4d0a4" />
+                    <polygon points="-8,-50 8,-50 0,-15" fill="#e6bd88" />
+                    
+                    <polygon points="-4,-10 4,-10 0,0" fill="#222" />
+                </g>
+            </g>
+        </svg>
+    </div>
+
+    <div class="controls">
+        <button onclick="nextStep()" id="nextBtn">Karakalem Çizime Başla</button>
+    </div>
+
+    <script>
+        const path = document.getElementById("revealPath");
+        const pen = document.getElementById("pen");
+        const penShadow = document.getElementById("penShadow");
+        const slideImage = document.getElementById("slideImage");
+        const stepBadge = document.getElementById("step-badge");
+        const stepTitle = document.getElementById("step-title");
+        const nextBtn = document.getElementById("nextBtn");
+
+        const slides = [
+            { x: 0, y: 0, title: "Hücrenin Keşfi" },
+            { x: -800, y: 0, title: "Hücre Bölünmesi (Mitoz)" },
+            { x: 0, y: -800, title: "Bitki ve Hayvan Hücresi" },
+            { x: -800, y: -800, title: "Hücre İçi Süreçler (Protein Sentezi)" }
+        ];
+
+        let currentStep = 0;
+        let progress = 0;
+        let animFrameId = null;
+        
+        // FİZİK MOTORU DEĞİŞKENLERİ (Spring Physics)
+        let penX = 0, penY = 0; // Kalemin anlık pozisyonu
+        let velX = 0, velY = 0; // Kalemin anlık hızı
+        let penRot = 45;        // Başlangıç tutuş açısı
+        let velRot = 0;         // Dönüş hızı
+        
+        // Fizik Ayarları
+        const stiffness = 0.12; // Yaya benzer gerginlik (hedefe ne kadar hızlı çekileceği)
+        const damping = 0.65;   // Sürtünme/Frenleme (Titremeyi ve salınımı kontrol eder)
+        
+        const speed = 0.0010; // İlerleme hızı
+
+        // İNSAN ELİ KARALAMA ALGORİTMASI
+        function generateHandSketchPath() {
+            let d = "M -50 -50 ";
+            let rows = 6;
+            let stepY = 850 / rows;
+            
+            for (let r = 0; r <= rows; r++) {
+                let y = r * stepY;
+                let isRight = r % 2 === 0;
+                let startX = isRight ? -50 : 850;
+                let endX = isRight ? 850 : -50;
+                let stepX = isRight ? 120 : -120;
+
+                for (let x = startX; isRight ? x <= endX : x >= endX; x += stepX) {
+                    // O anki bölgede 4 defa rastgele dairesel karalama yap
+                    for(let s = 0; s < 4; s++) {
+                        let cpX = x + (Math.random() - 0.5) * 300; // Geniş kavis kontrol noktası
+                        let cpY = y + (Math.random() - 0.5) * 300;
+                        let epX = x + (Math.random() - 0.5) * 150; // Hedef nokta
+                        let epY = y + (Math.random() - 0.5) * 150;
+                        
+                        d += ` Q ${cpX} ${cpY} ${epX} ${epY} `;
+                    }
+                }
+            }
+            return d;
+        }
+
+        path.setAttribute("d", generateHandSketchPath());
+        let totalLength = path.getTotalLength();
+
+        function startDraw() {
+            if(animFrameId) cancelAnimationFrame(animFrameId);
+            
+            progress = 0;
+            pen.style.display = 'block';
+
+            const currentSlide = slides[currentStep];
+            slideImage.setAttribute('x', currentSlide.x);
+            slideImage.setAttribute('y', currentSlide.y);
+            stepTitle.innerText = currentSlide.title;
+
+            path.style.strokeDasharray = totalLength;
+            path.style.strokeDashoffset = totalLength;
+
+            stepBadge.innerText = `ADIM ${currentStep + 1} / 4`;
+            nextBtn.innerText = currentStep === 3 ? "Baştan Başla" : "Sıradaki Parçayı Çiz";
+
+            const startPoint = path.getPointAtLength(0);
+            penX = startPoint.x;
+            penY = startPoint.y;
+            velX = 0;
+            velY = 0;
+            penRot = 40; // İnsan elinin doğal tutuş açısı (sağa yatık)
+
+            animate();
+        }
+
+        function animate() {
+            progress += speed;
+            if (progress > 1) progress = 1;
+
+            const drawnLength = totalLength * progress;
+            path.style.strokeDashoffset = totalLength - drawnLength;
+
+            // Maskenin hedef kordinatı
+            const targetPoint = path.getPointAtLength(drawnLength);
+            
+            // --- KAS VE YAY FİZİĞİ (SPRING PHYSICS) ---
+            // 1. Hedefe olan uzaklığa göre ivme hesapla
+            let accX = (targetPoint.x - penX) * stiffness;
+            let accY = (targetPoint.y - penY) * stiffness;
+            
+            // 2. İvmeyi hıza ekle ve sürtünme ile yavaşlat
+            velX = (velX + accX) * damping;
+            velY = (velY + accY) * damping;
+            
+            // 3. Hızı pozisyona ekle
+            penX += velX;
+            penY += velY;
+
+            // --- BİLEK ROTASYONU FİZİĞİ ---
+            // Sağa/Sola giderken bileği eğ (Standart 40 derece tutuş üzerine eklenir)
+            let targetRot = 40 + (velX * 1.5); 
+            // Rotasyon için yay fiziği
+            let accRot = (targetRot - penRot) * 0.1;
+            velRot = (velRot + accRot) * 0.7;
+            penRot += velRot;
+
+            // --- BASINÇ / GÖLGE FİZİĞİ ---
+            // Hız arttıkça gölge uzaklaşır (kalem kağıttan hafif kalkar)
+            let speedMag = Math.sqrt(velX * velX + velY * velY);
+            let shadowOffset = 6 + (speedMag * 0.3);
+            penShadow.setAttribute("transform", `translate(${shadowOffset}, ${shadowOffset})`);
+
+            // Fiziği Ekrana Yansıt
+            pen.setAttribute("transform", `translate(${penX}, ${penY}) rotate(${penRot})`);
+
+            if (progress < 1) {
+                animFrameId = requestAnimationFrame(animate);
+            } else {
+                pen.style.display = 'none'; 
+            }
+        }
+
+        function nextStep() {
+            path.setAttribute("d", generateHandSketchPath());
+            totalLength = path.getTotalLength();
+            currentStep = (currentStep + 1) % 4;
+            startDraw();
+        }
+
+        startDraw();
+    </script>
+</body>
+
+</html>

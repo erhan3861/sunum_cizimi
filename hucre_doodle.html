@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Hücre – Doodle Çizim Efekti</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    /* Animated star background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 20% 50%, rgba(79, 195, 247, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(129, 212, 250, 0.06) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    h1 {
+      font-family: 'Fredoka One', cursive;
+      color: #fff;
+      font-size: clamp(1.3rem, 3.5vw, 2rem);
+      text-shadow: 0 0 30px rgba(79, 195, 247, 0.5);
+      letter-spacing: 1px;
+    }
+
+    .board {
+      width: min(92vw, 700px);
+      aspect-ratio: 1 / 1;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 0 60px rgba(79, 195, 247, 0.25), 0 20px 60px rgba(0, 0, 0, 0.5);
+      border: 3px solid rgba(79, 195, 247, 0.4);
+      overflow: hidden;
+      position: relative;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Step labels */
+    .labels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: min(92vw, 700px);
+    }
+
+    .label-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 8px 14px;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: all 0.4s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .label-item .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      flex-shrink: 0;
+      transition: all 0.4s;
+    }
+
+    .label-item.active {
+      color: #fff;
+      background: rgba(79, 195, 247, 0.15);
+      border-color: rgba(79, 195, 247, 0.5);
+      box-shadow: 0 0 14px rgba(79, 195, 247, 0.2);
+    }
+
+    .label-item.active .dot {
+      background: #4fc3f7;
+      box-shadow: 0 0 8px rgba(79, 195, 247, 0.8);
+    }
+
+    .label-item.done {
+      color: rgba(255, 255, 255, 0.7);
+      background: rgba(77, 208, 225, 0.1);
+      border-color: rgba(77, 208, 225, 0.3);
+    }
+
+    .label-item.done .dot {
+      background: #4dd0e1;
+    }
+
+    /* Progress */
+    .prog-wrap {
+      width: min(92vw, 700px);
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .prog-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #4fc3f7, #4dd0e1);
+      border-radius: 10px;
+      transition: width 0.4s ease;
+      box-shadow: 0 0 8px rgba(79, 195, 247, 0.6);
+    }
+
+    /* Button */
+    .btn {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.05rem;
+      padding: 11px 40px;
+      background: linear-gradient(135deg, #4fc3f7, #0288d1);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 20px rgba(79, 195, 247, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 28px rgba(79, 195, 247, 0.6);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>🔬 Hücre Bilimi – Doodle Efekti</h1>
+
+  <div class="board">
+    <svg id="scene" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- 4 clip regions for quadrants -->
+        <clipPath id="clip0">
+          <rect x="0" y="0" width="398" height="398" />
+        </clipPath>
+        <clipPath id="clip1">
+          <rect x="402" y="0" width="398" height="398" />
+        </clipPath>
+        <clipPath id="clip2">
+          <rect x="0" y="402" width="398" height="398" />
+        </clipPath>
+        <clipPath id="clip3">
+          <rect x="402" y="402" width="398" height="398" />
+        </clipPath>
+
+        <!-- 4 reveal masks (one per quadrant) -->
+        <mask id="mask0">
+          <rect x="0" y="0" width="398" height="398" fill="black" />
+          <path id="rp0" fill="none" stroke="white" stroke-width="55" stroke-linecap="round" stroke-linejoin="round" />
+        </mask>
+        <mask id="mask1">
+          <rect x="402" y="0" width="398" height="398" fill="black" />
+          <path id="rp1" fill="none" stroke="white" stroke-width="55" stroke-linecap="round" stroke-linejoin="round" />
+        </mask>
+        <mask id="mask2">
+          <rect x="0" y="402" width="398" height="398" fill="black" />
+          <path id="rp2" fill="none" stroke="white" stroke-width="55" stroke-linecap="round" stroke-linejoin="round" />
+        </mask>
+        <mask id="mask3">
+          <rect x="402" y="402" width="398" height="398" fill="black" />
+          <path id="rp3" fill="none" stroke="white" stroke-width="55" stroke-linecap="round" stroke-linejoin="round" />
+        </mask>
+      </defs>
+
+      <!-- Dark background -->
+      <rect width="800" height="800" fill="#1a1a2e" />
+
+      <!-- Divider lines (subtle) -->
+      <line x1="400" y1="0" x2="400" y2="800" stroke="rgba(79,195,247,0.3)" stroke-width="3" />
+      <line x1="0" y1="400" x2="800" y2="400" stroke="rgba(79,195,247,0.3)" stroke-width="3" />
+
+      <!-- Q0: top-left -->
+      <image id="img0" href="hücre.jpg" x="0" y="0" width="800" height="800" clip-path="url(#clip0)" mask="url(#mask0)"
+        opacity="0" preserveAspectRatio="xMidYMid slice" />
+
+      <!-- Q1: top-right -->
+      <image id="img1" href="hücre.jpg" x="0" y="0" width="800" height="800" clip-path="url(#clip1)" mask="url(#mask1)"
+        opacity="0" preserveAspectRatio="xMidYMid slice" />
+
+      <!-- Q2: bottom-left -->
+      <image id="img2" href="hücre.jpg" x="0" y="0" width="800" height="800" clip-path="url(#clip2)" mask="url(#mask2)"
+        opacity="0" preserveAspectRatio="xMidYMid slice" />
+
+      <!-- Q3: bottom-right -->
+      <image id="img3" href="hücre.jpg" x="0" y="0" width="800" height="800" clip-path="url(#clip3)" mask="url(#mask3)"
+        opacity="0" preserveAspectRatio="xMidYMid slice" />
+
+      <!-- Pen cursor (emoji) -->
+      <text id="pen" font-size="24" opacity="0">🖊️</text>
+
+      <!-- Glow rectangle for active quad -->
+      <rect id="glowRect" x="0" y="0" width="0" height="0" fill="none" stroke="transparent" stroke-width="2" rx="8"
+        opacity="0">
+        <animate attributeName="stroke-opacity" values="0.7;0.2;0.7" dur="1.2s" repeatCount="indefinite" />
+      </rect>
+
+      <!-- Badge / label overlays -->
+      <g id="badges" font-family="Fredoka One,cursive" font-size="13">
+        <g id="badge0" opacity="0">
+          <text x="18" y="381" fill="#80deea">1. Adım: Hücrenin Keşfi</text>
+        </g>
+        <g id="badge1" opacity="0">
+          <text x="418" y="381" fill="#80deea">2. Adım: Hücre Bölünmesi</text>
+        </g>
+        <g id="badge2" opacity="0">
+          <text x="18" y="781" fill="#80deea">3. Adım: Bitki &amp; Hayvan</text>
+        </g>
+        <g id="badge3" opacity="0">
+          <text x="418" y="781" fill="#80deea">4. Adım: Protein Sentezi</text>
+        </g>
+      </g>
+
+      <!-- Sparkle layer -->
+      <g id="sparkles"></g>
+    </svg>
+  </div>
+
+  <!-- Labels row -->
+  <div class="labels">
+    <div class="label-item" id="lbl0">
+      <div class="dot"></div>1. Adım: Hücrenin Keşfi
+    </div>
+    <div class="label-item" id="lbl1">
+      <div class="dot"></div>2. Adım: Hücre Bölünmesi (Mitoz)
+    </div>
+    <div class="label-item" id="lbl2">
+      <div class="dot"></div>3. Adım: Bitki &amp; Hayvan Hücreleri
+    </div>
+    <div class="label-item" id="lbl3">
+      <div class="dot"></div>4. Adım: Hücre İçindeki Süreçler
+    </div>
+  </div>
+
+  <div class="prog-wrap">
+    <div class="prog-fill" id="progFill"></div>
+  </div>
+
+  <button class="btn" id="startBtn" onclick="startAll()">▶ Sunumu Başlat</button>
+
+  <script>
+    // ─── Quadrant configs ───────────────────────────────────────────────
+    // Each quadrant: {ox, oy} = top-left corner of the 398×398 area
+    const QUADS = [
+      { ox: 0, oy: 0 },   // Q0 top-left
+      { ox: 402, oy: 0 },   // Q1 top-right
+      { ox: 0, oy: 402 },   // Q2 bottom-left
+      { ox: 402, oy: 402 },   // Q3 bottom-right
+    ];
+    const QW = 398, QH = 398;
+    const ROWS = 9;
+    const SPEED = 0.0016; // lower = slower draw
+
+    // ─── Generate snake path for a quadrant ─────────────────────────────
+    function snakePath(ox, oy) {
+      const left = ox + 12;
+      const right = ox + QW - 12;
+      const top = oy + 12;
+      const bot = oy + QH - 12;
+      const stepY = (bot - top) / (ROWS - 1);
+
+      let d = `M ${left} ${top}`;
+      for (let i = 0; i < ROWS; i++) {
+        const y = top + i * stepY;
+        // Add slight bezier wobble for organic feel
+        const mid = (left + right) / 2;
+        const wobble = (i % 2 === 0 ? 1 : -1) * 8;
+        if (i % 2 === 0) {
+          d += ` Q ${mid} ${y + wobble} ${right} ${y}`;
+        } else {
+          d += ` Q ${mid} ${y + wobble} ${left} ${y}`;
+        }
+        // vertical step to next row
+        if (i < ROWS - 1) {
+          const ny = top + (i + 1) * stepY;
+          const nx = i % 2 === 0 ? right : left;
+          d += ` L ${nx} ${ny}`;
+        }
+      }
+      return d;
+    }
+
+    // ─── Setup paths ────────────────────────────────────────────────────
+    const paths = [];
+    const lengths = [];
+
+    QUADS.forEach((q, i) => {
+      const p = document.getElementById('rp' + i);
+      const d = snakePath(q.ox, q.oy);
+      p.setAttribute('d', d);
+      const len = p.getTotalLength();
+      p.style.strokeDasharray = len;
+      p.style.strokeDashoffset = len;
+      paths.push(p);
+      lengths.push(len);
+    });
+
+    // ─── Helpers ────────────────────────────────────────────────────────
+    const pen = document.getElementById('pen');
+    const prog = document.getElementById('progFill');
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    function setLabel(i, state) {
+      ['lbl0', 'lbl1', 'lbl2', 'lbl3'].forEach((id, j) => {
+        const el = document.getElementById(id);
+        el.className = 'label-item' + (j < i ? ' done' : j === i ? ' active' : '');
+      });
+    }
+
+    function setProgress(pct) { prog.style.width = pct + '%'; }
+
+    // Sparkle burst
+    const sparkleEl = document.getElementById('sparkles');
+    const emojis = ['✦', '✧', '★', '⬟', '◆', '✶', '⬡'];
+    function burst(cx, cy, count = 8) {
+      for (let s = 0; s < count; s++) {
+        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        t.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        t.setAttribute('x', cx);
+        t.setAttribute('y', cy);
+        t.setAttribute('font-size', 14 + Math.random() * 14);
+        t.setAttribute('fill', ['#4fc3f7', '#81d4fa', '#4dd0e1', '#fff176', '#ffcc80'][Math.floor(Math.random() * 5)]);
+        t.setAttribute('opacity', '1');
+        sparkleEl.appendChild(t);
+        const angle = (s / count) * Math.PI * 2;
+        const dist = 30 + Math.random() * 50;
+        const tx = Math.cos(angle) * dist;
+        const ty = Math.sin(angle) * dist;
+        t.animate([
+          { transform: `translate(0,0)`, opacity: 1 },
+          { transform: `translate(${tx}px,${ty}px)`, opacity: 0 }
+        ], { duration: 900 + Math.random() * 400, easing: 'ease-out', fill: 'forwards' });
+        setTimeout(() => t.remove(), 1400);
+      }
+    }
+
+    // Glow rect animation
+    const glowRect = document.getElementById('glowRect');
+    function setGlow(qi) {
+      const q = QUADS[qi];
+      glowRect.setAttribute('x', q.ox + 2);
+      glowRect.setAttribute('y', q.oy + 2);
+      glowRect.setAttribute('width', QW - 4);
+      glowRect.setAttribute('height', QH - 4);
+      glowRect.setAttribute('stroke', 'rgba(79,195,247,0.7)');
+      glowRect.setAttribute('opacity', '1');
+    }
+    function hideGlow() { glowRect.setAttribute('opacity', '0'); }
+
+    // ─── Animate one quadrant ────────────────────────────────────────────
+    function animateQuad(qi) {
+      return new Promise(resolve => {
+        const p = paths[qi];
+        const len = lengths[qi];
+        const img = document.getElementById('img' + qi);
+        img.setAttribute('opacity', '1');
+
+        let progress = 0;
+
+        function frame() {
+          progress = Math.min(1, progress + SPEED);
+          const drawn = len * progress;
+          p.style.strokeDashoffset = len - drawn;
+
+          // Move pen to current draw position
+          const pt = p.getPointAtLength(drawn);
+          pen.setAttribute('transform', `translate(${pt.x}, ${pt.y - 10})`);
+          pen.setAttribute('opacity', '1');
+
+          if (progress < 1) {
+            requestAnimationFrame(frame);
+          } else {
+            resolve();
+          }
+        }
+
+        requestAnimationFrame(frame);
+      });
+    }
+
+    // Badge fade-in
+    function showBadge(i) {
+      const b = document.getElementById('badge' + i);
+      b.setAttribute('opacity', '0');
+      let op = 0;
+      const iv = setInterval(() => {
+        op = Math.min(1, op + 0.05);
+        b.setAttribute('opacity', op);
+        if (op >= 1) clearInterval(iv);
+      }, 20);
+    }
+
+    // ─── Main sequence ───────────────────────────────────────────────────
+    let running = false;
+
+    async function startAll() {
+      if (running) return;
+      running = true;
+      const btn = document.getElementById('startBtn');
+      btn.disabled = true;
+
+      // Reset
+      sparkleEl.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        document.getElementById('img' + i).setAttribute('opacity', '0');
+        document.getElementById('badge' + i).setAttribute('opacity', '0');
+        paths[i].style.strokeDashoffset = lengths[i];
+      }
+      pen.setAttribute('opacity', '0');
+      setProgress(0);
+      setLabel(-1, '');
+      await sleep(300);
+
+      for (let i = 0; i < 4; i++) {
+        setLabel(i, 'active');
+        setGlow(i);
+
+        await animateQuad(i);
+
+        // Burst at center of quad
+        const q = QUADS[i];
+        burst(q.ox + QW / 2, q.oy + QH / 2, 10);
+        showBadge(i);
+        hideGlow();
+
+        setProgress((i + 1) * 25);
+        await sleep(600);
+      }
+
+      // Final burst
+      pen.setAttribute('opacity', '0');
+      await sleep(200);
+      for (let s = 0; s < 3; s++) {
+        burst(400, 400, 14);
+        await sleep(250);
+      }
+
+      btn.textContent = '🔄 Tekrar İzle';
+      btn.disabled = false;
+      running = false;
+    }
+  </script>
+</body>
+
+</html>

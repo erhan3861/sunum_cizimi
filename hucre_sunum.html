@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hücre Biyolojisi - Doğal Çizim</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #1a1a2e;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .header-info {
+      text-align: center;
+      margin-bottom: 2vh;
+    }
+
+    .step-badge {
+      display: inline-block;
+      background: #007aff;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 1.3rem;
+      margin: 0;
+    }
+
+    /* Sunum Tahtası - Boyutlar Küçültüldü ve Dinamikleştirildi */
+    .board {
+      width: 70vmin;
+      height: 70vmin;
+      max-width: 650px;
+      max-height: 650px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      position: relative;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .controls {
+      margin-top: 3vh;
+    }
+
+    button {
+      padding: 12px 30px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      border-radius: 30px;
+      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+      color: white;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header-info">
+    <div class="step-badge" id="step-badge">ADIM 1 / 4</div>
+    <h2 id="step-title">Hücrenin Keşfi</h2>
+  </div>
+
+  <div class="board">
+    <svg id="scene" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <mask id="revealMask">
+          <rect x="0" y="0" width="800" height="800" fill="black" />
+          <path id="revealPath" fill="none" stroke="white" stroke-width="180" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </mask>
+      </defs>
+
+      <image id="slideImage" href="hücre.jpg" x="0" y="0" width="1600" height="1600"
+        preserveAspectRatio="xMidYMid slice" mask="url(#revealMask)" />
+
+      <g id="pen" style="display: none;">
+        <rect x="-6" y="-100" width="16" height="80" rx="8" fill="rgba(0,0,0,0.2)" transform="translate(8, 8)" />
+        <rect x="-8" y="-100" width="16" height="80" rx="8" fill="#e8e8e8" stroke="#bbb" stroke-width="1" />
+        <rect x="-5" y="-95" width="3" height="70" rx="1.5" fill="#fff" opacity="0.9" />
+        <rect x="-8" y="-28" width="16" height="4" fill="#007aff" />
+        <polygon points="-8,-20 8,-20 3,-5 -3,-5" fill="#999" />
+        <polygon points="-3,-5 3,-5 0,0" fill="#222" />
+      </g>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <button onclick="nextStep()" id="nextBtn">Sonraki Adımı Çiz</button>
+  </div>
+
+  <script>
+    const path = document.getElementById("revealPath");
+    const pen = document.getElementById("pen");
+    const slideImage = document.getElementById("slideImage");
+    const stepBadge = document.getElementById("step-badge");
+    const stepTitle = document.getElementById("step-title");
+    const nextBtn = document.getElementById("nextBtn");
+
+    const slides = [
+      { x: 0, y: 0, title: "Hücrenin Keşfi" },
+      { x: -800, y: 0, title: "Hücre Bölünmesi (Mitoz)" },
+      { x: 0, y: -800, title: "Bitki ve Hayvan Hücresi" },
+      { x: -800, y: -800, title: "Hücre İçi Süreçler (Protein Sentezi)" }
+    ];
+
+    let currentStep = 0;
+    let progress = 0;
+    let animFrameId = null;
+    let prevX = 0;
+
+    const speed = 0.0035;
+
+    // ORGANİK ÇİZİM YOLU OLUŞTURMA (Bezier Kavisleri ile)
+    function generateNaturalPath() {
+      const left = 50, right = 750, top = 50, bottom = 750;
+      const rows = 9;
+      const stepY = (bottom - top) / (rows - 1);
+      let d = `M ${left} ${top}`;
+
+      for (let i = 0; i < rows; i++) {
+        const y = top + i * stepY;
+        const midX = (left + right) / 2;
+
+        if (i % 2 === 0) {
+          // Soldan Sağa Kavisli Çiziş
+          d += ` Q ${midX} ${y + 20} ${right} ${y}`;
+          if (i < rows - 1) {
+            // Aşağı Yumuşak Dönüş
+            d += ` Q ${right + 40} ${y + stepY / 2} ${right} ${y + stepY}`;
+          }
+        } else {
+          // Sağdan Sola Kavisli Çiziş
+          d += ` Q ${midX} ${y + 20} ${left} ${y}`;
+          if (i < rows - 1) {
+            // Aşağı Yumuşak Dönüş
+            d += ` Q ${left - 40} ${y + stepY / 2} ${left} ${y + stepY}`;
+          }
+        }
+      }
+      return d;
+    }
+
+    path.setAttribute("d", generateNaturalPath());
+    const totalLength = path.getTotalLength();
+
+    function startDraw() {
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+
+      progress = 0;
+      pen.style.display = 'block';
+
+      const currentSlide = slides[currentStep];
+      slideImage.setAttribute('x', currentSlide.x);
+      slideImage.setAttribute('y', currentSlide.y);
+      stepTitle.innerText = currentSlide.title;
+
+      path.style.strokeDasharray = totalLength;
+      path.style.strokeDashoffset = totalLength;
+
+      stepBadge.innerText = `ADIM ${currentStep + 1} / 4`;
+      nextBtn.innerText = currentStep === 3 ? "Baştan Başla" : "Sonraki Adımı Çiz";
+
+      const startPoint = path.getPointAtLength(0);
+      prevX = startPoint.x;
+
+      animate();
+    }
+
+    function animate() {
+      progress += speed;
+      if (progress > 1) progress = 1;
+
+      const drawnLength = totalLength * progress;
+      path.style.strokeDashoffset = totalLength - drawnLength;
+
+      const point = path.getPointAtLength(drawnLength);
+
+      const diffX = point.x - prevX;
+      let rotationAngle = diffX * 1.5;
+
+      if (rotationAngle > 25) rotationAngle = 25;
+      if (rotationAngle < -25) rotationAngle = -25;
+
+      pen.setAttribute("transform", `translate(${point.x}, ${point.y}) rotate(${rotationAngle})`);
+
+      prevX = point.x;
+
+      if (progress < 1) {
+        animFrameId = requestAnimationFrame(animate);
+      } else {
+        pen.style.display = 'none';
+      }
+    }
+
+    function nextStep() {
+      currentStep = (currentStep + 1) % 4;
+      startDraw();
+    }
+
+    startDraw();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sprite Animasyonu</title>
+    <style>
+        :root {
+            --cols: 4;
+            --rows: 4;
+            --frame-width: 256px;
+            --frame-height: 256px;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #2c3e50;
+            font-family: sans-serif;
+        }
+
+        .sprite-container {
+            width: var(--frame-width);
+            height: var(--frame-height);
+            overflow: hidden;
+            position: relative;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        #sprite {
+            /* 4 sütun → %400 genişlik, 4 satır → %400 yükseklik */
+            width: calc(var(--cols) * 100%);
+            height: calc(var(--rows) * 100%);
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: none;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sprite-container">
+        <img src="img.png" id="sprite" alt="Karakter Animasyonu">
+    </div>
+
+    <div class="controls">
+        <button onclick="startAnimation()">BAŞLAT</button>
+    </div>
+
+    <script>
+        const sprite = document.getElementById('sprite');
+
+        const COLS = 4;          // Spritesheet'teki sütun sayısı
+        const ROWS = 4;          // Spritesheet'teki satır sayısı
+        const TOTAL_FRAMES = COLS * ROWS; // Toplam kare: 16
+        const FRAME_SPEED = 150; // Her kare arası süre (ms)
+
+        let currentFrame = 0;
+        let animationInterval = null;
+
+        function startAnimation() {
+            currentFrame = 0;
+
+            // Önceki döngüyü temizle
+            if (animationInterval) clearInterval(animationInterval);
+
+            // Hemen ilk kareyi göster
+            showFrame(0);
+
+            // Döngüyü başlat
+            animationInterval = setInterval(() => {
+                currentFrame = (currentFrame + 1) % TOTAL_FRAMES;
+                showFrame(currentFrame);
+            }, FRAME_SPEED);
+        }
+
+        function showFrame(frameIndex) {
+            // frameIndex: 0–15 arası lineer indeks
+            // Sütun ve satırı hesapla (soldan sağa, yukarıdan aşağıya)
+            const col = frameIndex % COLS;
+            const row = Math.floor(frameIndex / COLS);
+
+            // Her kare, görselin 1/COLS'lik ve 1/ROWS'luk bölümüne denk gelir
+            // %25'lik birimlerle kaydırma (100/4 = 25)
+            const xOffset = -(col * (100 / COLS));
+            const yOffset = -(row * (100 / ROWS));
+
+            sprite.style.transform = `translate(${xOffset}%, ${yOffset}%)`;
+        }
+
+        // Sayfa yüklendiğinde animasyonu otomatik başlat
+        startAnimation();
+    </script>
+</body>
+
+</html>
